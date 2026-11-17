@@ -1,3 +1,5 @@
+from telegram.ext import MessageHandler, CallbackQueryHandler, filters
+from dropzone import handle_upload, list_files, handle_download_callback
 import logging
 import time
 from collections import defaultdict, deque
@@ -100,17 +102,18 @@ async def help_command(
         "/cmd free -h\n\n"
 
         "NETWORK COMMANDS\n"
-        "/cmd ping -c 2 192.168.100.5\n"
-        "/cmd nmap 192.168.100.5\n"
-        "/cmd nmap -F 192.168.100.5\n"
-        "/cmd nmap -sV 192.168.100.5\n"
-        "/cmd nmap -p 80,443 192.168.100.5\n"
-        "/cmd nmap -sT -sV -p 80,443 192.168.100.5\n"
-        "/cmd nmap --top-ports 100 192.168.100.5\n\n"
+        "/cmd ping -c 2 <TARGET_IP>\n"
+        "/cmd nmap <TARGET_IP>\n"
+        "/cmd nmap -F <TARGET_IP>\n"
+        "/cmd nmap -sV <TARGET_IP>\n"
+        "/cmd nmap -p 80,443 <TARGET_IP>\n"
+        "/cmd nmap -sT -sV -p 80,443 <TARGET_IP>\n"
+        "/cmd nmap --top-ports 100 <TARGET_IP>\n\n"
 
         "OTHER COMMANDS\n"
         "/start - Start bot\n"
         "/help - Show commands\n"
+        "/files - Open Drop Zone menu\n"
         "/status - Check status\n\n"
 
         "Only approved commands and authorized "
@@ -189,6 +192,9 @@ def main():
     application = (
         ApplicationBuilder()
         .token(BOT_TOKEN)
+        .read_timeout(30)
+        .write_timeout(30)
+        .connect_timeout(30)
         .build()
     )
 
@@ -206,6 +212,22 @@ def main():
 
     application.add_handler(
         CommandHandler("cmd", cmd)
+    )
+
+    # Drop Zone Handlers
+    application.add_handler(
+        CommandHandler("files", list_files)
+    )
+    application.add_handler(
+        CallbackQueryHandler(handle_download_callback)
+    )
+
+    # Catch incoming files (Documents & Photos only, strictly checking authorization)
+    application.add_handler(
+        MessageHandler(
+            filters.User(AUTHORIZED_USER_ID) & (filters.Document.ALL | filters.PHOTO),
+            handle_upload
+        )
     )
 
     logger.info("Starting TeleKali...")

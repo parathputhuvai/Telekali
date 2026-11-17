@@ -16,3 +16,6 @@ try:
     AUTHORIZED_USER_ID = int(AUTHORIZED_USER_ID)
 except ValueError:
     raise RuntimeError("Telegram user ID must be numeric")
+# Drop Zone configuration (Defaults: 500MB Limit, 350MB Warn)
+DROPZONE_LIMIT_MB = float(os.getenv("DROPZONE_LIMIT_MB", 500))
+DROPZONE_WARN_MB = float(os.getenv("DROPZONE_WARN_MB", 350))
